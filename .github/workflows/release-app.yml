@@ -45,6 +45,10 @@ jobs:
             args: "--target x86_64-pc-windows-msvc" # TODO CUDA, mkl?  --features "openblas"
             pre-build-args: "" # --openblas
           # windows arm: https://github.com/ahqsoftwares/tauri-ahq-store/blob/2fbc2103c222662b3c6ee0cd71fcde664824f0ef/.github/workflows/publish.yml#L136
+          - platform: "windows-latest" # Windows ARM64
+            args: "--target aarch64-pc-windows-msvc"
+            target: aarch64-pc-windows-msvc
+            pre-build-args: ""
 
     runs-on: ${{ matrix.platform }}
     steps:
@@ -160,6 +164,26 @@ jobs:
           name: build-artifacts
           path: ./target/aarch64-apple-darwin/release/screenpipe
 
+      - name: Install Dependencies for V8 Build (Windows)
+        run: |
+          choco install ninja
+          choco install gn
+          choco install python --version 3.9
+          curl https://sh.rustup.rs -sSf | sh -s -- -y
+
+      - name: Force V8 Build from Source
+        env:
+          V8_FROM_SOURCE: 1
+          RUST_BACKTRACE: 1
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+
+      - name: Upload build artifacts for Windows ARM64
+        if: matrix.platform == 'windows-latest' && matrix.args == '--target aarch64-pc-windows-msvc'
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-arm64-artifacts
+          path: ./target/aarch64-pc-windows-msvc/release
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
 

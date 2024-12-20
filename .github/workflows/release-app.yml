@@ -98,7 +98,7 @@ jobs:
           api-key: ${{ secrets.CN_API_KEY }}
 
   publish-tauri:
-    # needs: [check_commit, draft]
+    needs: [check_commit, draft]
     if: github.event_name == 'workflow_dispatch' || needs.check_commit.outputs.should_release == 'true'
     permissions:
       contents: write
